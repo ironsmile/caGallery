@@ -12,7 +12,9 @@ Element.addMethods({
   
 });
 
-
+function debug(str){
+  $('debug').insert(str.toString()+'<br />');
+}
 
 caGallery = {
   
@@ -24,7 +26,7 @@ caGallery = {
   
   configs : $H({
     'holder' : "slideshow_holder",
-    'loading_pic' : "pictures/ajax.gif",
+    'loading_pic' : "images/ajax.gif",
     'album_div' : "gallery_album",
     'max_picture_size' : "1200x800",
     'thumb_container_height' : 160
@@ -35,6 +37,28 @@ caGallery = {
   CURRENT_IMG_INDEX : 0,
   
   timer : null, // used in the slideshow to wait for the window resizing
+  
+  /**
+  *
+  * Loaders
+  *
+  */
+  
+  load_from_ajax : function(src){
+    
+    new Ajax.Request(src, {
+      method: 'get',
+      onSuccess: function(transport) {
+        var pics_array = JSON.parse(transport.responseText);
+        caGallery.init(pics_array);
+      },
+      onFailure : function(transport){
+        alert("Error with your ajax request!");
+      }
+    });
+    
+  },
+  
   
   /**
   * 
@@ -51,7 +75,8 @@ caGallery = {
       im.observe('load', function(e){ 
         var img = e.element();
         var tp = Math.abs((cont_height - img.height))/2;
-        img.setStyle({top : tp}) 
+        img.setStyle({top : tp});
+        img.parentNode.setStyle({ backgroundImage : 'none' });
       });
       gal.insert( (new Element("div", {class:"gallery_picture_holder"})).update(im).observe( 'click', caGallery.__eventShowImg(i) ) );
     }
@@ -127,6 +152,7 @@ caGallery = {
     if(typeof(window['shortcut']) != 'undefined'){
       shortcut.add('right', function(){ caGallery.changeImg(1); });
       shortcut.add('left', function(){ caGallery.changeImg(-1); });
+      shortuct.add('escape', function(){ caGallery.closeSlideshow(); })
     }
   },
   
@@ -134,6 +160,7 @@ caGallery = {
     if(typeof(window['shortcut']) != 'undefined'){
       shortcut.remove('right');
       shortcut.remove('left');
+      shortcut.remove('escape');
     }
   }
 
