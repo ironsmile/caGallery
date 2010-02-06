@@ -81,6 +81,8 @@ caGallery = {
       gal.insert( (new Element("div", {class:"gallery_picture_holder"})).update(im).observe( 'click', caGallery.__eventShowImg(i) ) );
     }
     
+    gal.insert('<div style="clear:both;"></div>');
+    
     $(window.document.body).insert(caGallery.slideshowHtml);
   },
   
@@ -92,7 +94,7 @@ caGallery = {
     caGallery.CURRENT_IMG_INDEX = typeof(ind) == 'undefined' ? 0 : ind;
     caGallery.changeImg();
     $("slideshow_background").setStyle({width : document.viewport.getWidth(), height : document.viewport.getHeight()}).show();
-    $("slideshow_container").setStyle({ top : 3 }).appear();
+    $("slideshow_container").setStyle({ top : document.viewport.getScrollOffsets().top }).appear();
     caGallery.addShortcutListeners();
   },
 
