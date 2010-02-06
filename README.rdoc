@@ -1,0 +1,18 @@
+== Introduction
+
+This is a javascript gallery which includes two seperate things:
+ 
+* The gallery interface which is purely JS
+* Script which feeds images to the gallery
+    
+The feeder script can fetch images from anywhere - from local files to
+online image storage like Flicker.
+
+== Usage
+
+Just see the example in index.php :)
+
+== TODO
+
+* Pagination!
+* Flicker feeder

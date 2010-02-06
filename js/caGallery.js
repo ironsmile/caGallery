@@ -12,9 +12,9 @@ Element.addMethods({
   
 });
 
-function debug(str){
-  $('debug').insert(str.toString()+'<br />');
-}
+// function debug(str){
+//   $('debug').insert(str.toString()+'<br />');
+// }
 
 caGallery = {
   
