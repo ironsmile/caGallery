@@ -12,7 +12,16 @@ online image storage like Flicker.
 
 Just see the example in index.php :)
 
+== Requires
+
+* prototype js - http://www.prototypejs.org/
+* scriptaculous js - http://script.aculo.us/
+* OpenJS's keyboard shortcuts - http://www.openjs.com/scripts/events/keyboard_shortcuts/
+
+They are all in this repo.
+
 == TODO
 
 * Pagination!
 * Flicker feeder
+* Wrinte my own keyboard shortuct functions
