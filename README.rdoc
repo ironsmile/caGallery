@@ -22,6 +22,5 @@ They are all in this repo.
 
 == TODO
 
-* Pagination!
 * Flicker feeder
 * Wrinte my own keyboard shortuct functions

@@ -21,7 +21,9 @@ caGallery = {
   init : function( pics, cfgs ){
     caGallery.PICTURES = pics;
     caGallery.configs.update(cfgs);
-    caGallery.createGallery();
+    var gal = $(caGallery.configs.get('album_div'));
+    $(window.document.body).insert(caGallery.slideshowHtml);
+    caGallery.populateGallery(0, caGallery.configs.get("images_per_page"));
   },
   
   configs : $H({
@@ -29,7 +31,8 @@ caGallery = {
     'loading_pic' : "images/ajax.gif",
     'album_div' : "gallery_album",
     'max_picture_size' : "1200x800",
-    'thumb_container_height' : 160
+    'thumb_container_height' : 160,
+    'images_per_page' : 15
   }),
   
   PICTURES : [],
@@ -66,10 +69,15 @@ caGallery = {
   * 
   */
   
-  createGallery : function(){
+  populateGallery : function(start, end){
     var gal = $(caGallery.configs.get('album_div'));
     var cont_height = parseInt(caGallery.configs.get("thumb_container_height"));
-    for( var i=0; i < caGallery.PICTURES.length; i++ ){
+    var all_pics_count = caGallery.PICTURES.length;
+    var per_page = parseInt(caGallery.configs.get("images_per_page"));
+    
+    gal.update('<div style="clear:both;"></div>');
+    end = (all_pics_count < end) ? all_pics_count : end;
+    for( var i=start; i < end; i++ ){
       var im = new Element("img", { src : caGallery.PICTURES[i].thumb });
       im.setStyle( { position : 'relative' } );
       im.observe('load', function(e){ 
@@ -78,12 +86,20 @@ caGallery = {
         img.setStyle({top : tp});
         img.parentNode.setStyle({ backgroundImage : 'none' });
       });
-      gal.insert( (new Element("div", {class:"gallery_picture_holder"})).update(im).observe( 'click', caGallery.__eventShowImg(i) ) );
+      gal.insert( (new Element("div", {'class':"gallery_picture_holder"})).update(im).observe( 'click', caGallery.__eventShowImg(i) ) );
     }
     
-    gal.insert('<div style="clear:both;"></div>');
-    
-    $(window.document.body).insert(caGallery.slideshowHtml);
+    var pages = [];
+    for( var i = 1; i < all_pics_count/per_page; i++){
+      pages[pages.length] = '<a href="javascript:void(0);" onclick="caGallery.toPage('+i+');">'+i+'</a>';
+    }
+    gal.insert('<div style="clear:both;"></div><p>'+pages.join(" | ")+'</p>');
+  },
+
+  toPage : function(ind){
+    if(ind < 1){ ind = 1; }
+    var per_page = parseInt(caGallery.configs.get("images_per_page"));
+    caGallery.populateGallery((ind-1)*per_page, ind*per_page);
   },
   
   __eventShowImg : function( ind ){ // lambda-like func
@@ -93,7 +109,7 @@ caGallery = {
   showImg : function( ind ){
     caGallery.CURRENT_IMG_INDEX = typeof(ind) == 'undefined' ? 0 : ind;
     caGallery.changeImg();
-    $("slideshow_background").setStyle({width : document.viewport.getWidth(), height : document.viewport.getHeight()}).show();
+    $("slideshow_background").show();
     $("slideshow_container").setStyle({ top : document.viewport.getScrollOffsets().top }).appear();
     caGallery.addShortcutListeners();
   },
@@ -137,8 +153,10 @@ caGallery = {
       $(caGallery.configs.get('holder')).centerChangeSize([ iwidth, iheight ]);
       if(caGallery.timer){ clearTimeout(caGallery.timer); }
       caGallery.timer = setTimeout( function(){
-        $(caGallery.configs.get('holder')).update(i); i.appear({ duration : 0.25 }); 
+        $(caGallery.configs.get('holder')).update(i); i.appear({ duration : 0.25 });
+        $("slideshow_background").setStyle({height : document.viewport.getHeight()})
       }, 1000 );
+      
     });
     
     img.src = caGallery.PICTURES[ caGallery.CURRENT_IMG_INDEX % caGallery.PICTURES.length ].src;
@@ -154,7 +172,7 @@ caGallery = {
     if(typeof(window['shortcut']) != 'undefined'){
       shortcut.add('right', function(){ caGallery.changeImg(1); });
       shortcut.add('left', function(){ caGallery.changeImg(-1); });
-      shortuct.add('escape', function(){ caGallery.closeSlideshow(); })
+      shortcut.add('escape', function(){ caGallery.closeSlideshow(); })
     }
   },
   
