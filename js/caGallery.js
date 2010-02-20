@@ -22,6 +22,7 @@ caGallery = {
     caGallery.PICTURES = pics;
     caGallery.configs.update(cfgs);
     var gal = $(caGallery.configs.get('album_div'));
+    gal.update('<img src="'+caGallery.configs.get('gallery_loader_pic')+'" alt="Loading..." />');
     $(window.document.body).insert(caGallery.slideshowHtml);
     caGallery.populateGallery(0, caGallery.configs.get("images_per_page"));
   },
@@ -29,6 +30,7 @@ caGallery = {
   configs : $H({
     'holder' : "slideshow_holder",
     'loading_pic' : "images/ajax.gif",
+    'gallery_loader_pic' : "images/gallery-loader.gif",
     'album_div' : "gallery_album",
     'max_picture_size' : "1200x800",
     'thumb_container_height' : 160,
@@ -48,6 +50,8 @@ caGallery = {
   */
   
   load_from_ajax : function(src){
+    var gal = $(caGallery.configs.get('album_div'));
+    gal.update('<img src="'+caGallery.configs.get('gallery_loader_pic')+'" alt="Loading..." />');
     
     new Ajax.Request(src, {
       method: 'get',
@@ -59,7 +63,6 @@ caGallery = {
         alert("Error with your ajax request!");
       }
     });
-    
   },
   
   
@@ -90,7 +93,11 @@ caGallery = {
     }
     
     var pages = [];
-    for( var i = 1; i < all_pics_count/per_page; i++){
+    var pages_count = all_pics_count/per_page;
+    if(all_pics_count%per_page){
+      pages_count += 1;
+    }
+    for( var i = 1; i < pages_count; i++){
       pages[pages.length] = '<a href="javascript:void(0);" onclick="caGallery.toPage('+i+');">'+i+'</a>';
     }
     gal.insert('<div style="clear:both;"></div><p>'+pages.join(" | ")+'</p>');
