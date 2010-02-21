@@ -31,8 +31,9 @@ caGallery = {
     'holder' : "slideshow_holder",
     'loading_pic' : "images/ajax.gif",
     'gallery_loader_pic' : "images/gallery-loader.gif",
+    'new_window_pic' : "images/open.png",
     'album_div' : "gallery_album",
-    'max_picture_size' : "1200x800",
+    'shrink_to_screen' : true,
     'thumb_container_height' : 160,
     'images_per_page' : 15
   }),
@@ -98,7 +99,11 @@ caGallery = {
       pages_count += 1;
     }
     for( var i = 1; i < pages_count; i++){
-      pages[pages.length] = '<a href="javascript:void(0);" onclick="caGallery.toPage('+i+');">'+i+'</a>';
+      if((i-1)*per_page == start){
+        pages[pages.length] = '<span class="selected_page">'+i+'</span>';
+      } else {
+        pages[pages.length] = '<a href="javascript:void(0);" onclick="caGallery.toPage('+i+');">'+i+'</a>';
+      }
     }
     gal.insert('<div style="clear:both;"></div><p>'+pages.join(" | ")+'</p>');
   },
@@ -123,50 +128,68 @@ caGallery = {
 
   changeImg : function( ind ){
     ind = typeof(ind) == 'undefined' ? 0 : ind;
-    caGallery.CURRENT_IMG_INDEX += parseInt(ind);
-    if( caGallery.CURRENT_IMG_INDEX == -1 ) caGallery.CURRENT_IMG_INDEX = caGallery.PICTURES.length-1;
+    var current_index = caGallery.CURRENT_IMG_INDEX += parseInt(ind);
+    
+    if( current_index == -1 ) current_index = caGallery.PICTURES.length-1;
+    current_index = current_index % caGallery.PICTURES.length;
+    var img_src = caGallery.PICTURES[ current_index ].src;
+    caGallery.CURRENT_IMG_INDEX = current_index;
+    
+    var info = (current_index+1)+' / '+(caGallery.PICTURES.length);
+    info += ' <a target="_blank" href="'+escape(img_src)+'"> \
+                <img style="vertical-align:middle" src="'+caGallery.configs.get('new_window_pic')+'" alt="nw" title="open in new window" /> \
+              </a>';
     
     // showing the loading image
     $(caGallery.configs.get('holder')).update('<img src="'+caGallery.configs.get('loading_pic')+'" alt="" />');
     var img = $(new Image());
-//     img._configs = caGallery.configs; // so some stuff can be used onload of the picture
     img.observe('load', function(e){
       var i = e.target.setStyle({ display : "none" });
+      var sizes = caGallery.getSlideShowImageSize(i);
+      iwidth = sizes['width'];
+      iheight = sizes['height'];
       
-      // making sure the image fits in the max height/width dimensions
-      var sizemtach = caGallery.configs.get('max_picture_size').match(/^([\d]+)x([\d]+)$/);
-      if( sizemtach ){
-        var max_width = sizemtach[1];
-        var max_height = sizemtach[2];
-      } else {
-        var max_width = window.viewport.getWidth();
-        var max_height = window.viewport.getHeight();
-      }
-      if( i.width > max_width || i.height > max_height ){
-        if( i.width > max_width && i.height <= max_height ){
-          var coef = i.width / max_width ;
-        } else if( i.width <= max_width && i.height > max_height ){
-          var coef = i.height / max_height ;
-        } else {
-          var coef = i.height / max_height;
-          coef = ( i.width / max_width > coef ) ? i.width / max_width : coef ;
-        }
-        var iwidth = parseInt(i.width/coef);
-        var iheight = parseInt(i.height/coef);
-      } else { var iwidth = i.width; var iheight = i.height; }
       i.writeAttribute({"width" : iwidth, "height" : iheight});
       i.setStyle({"width" : iwidth, "height" : iheight});
 
       $(caGallery.configs.get('holder')).centerChangeSize([ iwidth, iheight ]);
       if(caGallery.timer){ clearTimeout(caGallery.timer); }
       caGallery.timer = setTimeout( function(){
-        $(caGallery.configs.get('holder')).update(i); i.appear({ duration : 0.25 });
-        $("slideshow_background").setStyle({height : document.viewport.getHeight()})
+        var hldr = caGallery.configs.get('holder');
+        $(hldr).update(i);
+        i.appear({ duration : 0.25 });
+        $(hldr).insert('<div id="info">'+info+'</div>');
       }, 1000 );
       
     });
     
-    img.src = caGallery.PICTURES[ caGallery.CURRENT_IMG_INDEX % caGallery.PICTURES.length ].src;
+    img.src = img_src;
+  },
+
+  getSlideShowImageSize : function(i){
+    // if shrink_to_screen is set to 'no'
+    if(!caGallery.configs.get('shrink_to_screen')){
+      return {'width':i.width, 'height':i.height};
+    }
+  
+    // making sure the image fits in the max height/width dimensions
+    var max_width = window.innerWidth-15 ;
+    var max_height = window.innerHeight-80 ;// -80 to fit the controls in
+    
+    if( i.width > max_width || i.height > max_height ){
+      if( i.width > max_width && i.height <= max_height ){
+        var coef = i.width / max_width ;
+      } else if( i.width <= max_width && i.height > max_height ){
+        var coef = i.height / max_height ;
+      } else {
+        var coef = i.height / max_height;
+        coef = ( i.width / max_width > coef ) ? i.width / max_width : coef ;
+      }
+      var iwidth = parseInt(i.width/coef);
+      var iheight = parseInt(i.height/coef);
+    } else { var iwidth = i.width; var iheight = i.height; }
+
+    return {'width':iwidth, 'height':iheight};
   },
   
   closeSlideshow : function(){
