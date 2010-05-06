@@ -24,7 +24,7 @@
   $force = isset($_GET['force']);
   $size = isset($_GET['size']) ? (int)$_GET['size'] : 150;
   
-  $thum_fname = $thumbs_dir.basename($src).'.png';
+  $thum_fname = $thumbs_dir.md5_file($src).'.png';
   if($force or !is_file($thum_fname)){
     exec('convert '.escapeshellarg($src).' -resize '.$size.'x'.$size.' '.escapeshellarg($thum_fname), $output, $ext_sts);
   }
