@@ -19,19 +19,38 @@ Element.addMethods({
 caGallery = {
   
   init : function( pics, cfgs ){
+    
     caGallery.PICTURES = pics;
     caGallery.configs.update(cfgs);
+    
     var gal = $(caGallery.configs.get('album_div'));
     gal.update('<img src="'+caGallery.configs.get('gallery_loader_pic')+'" alt="Loading..." />');
+    
     $(window.document.body).insert(caGallery.slideshowHtml);
     caGallery.populateGallery(0, caGallery.configs.get("images_per_page"));
+    
+    $(caGallery.configs.get('holder')).observe('click', function(event){
+      var holder = event.element();
+      
+      var left_side = holder.cumulativeOffset().left;
+      var right_side = left_side + holder.getWidth();
+      
+      var click_x = event.pointerX();
+      
+      if ((click_x - left_side) < (right_side - click_x)) {
+        caGallery.previous();
+      } else {
+        caGallery.next();
+      }
+    });
+    
   },
   
   configs : $H({
     'holder' : "slideshow_holder",
-    'loading_pic' : "images/ajax.gif",
-    'gallery_loader_pic' : "images/gallery-loader.gif",
-    'new_window_pic' : "images/open.png",
+    'loading_pic' : "/images/caGallery/ajax.gif",
+    'gallery_loader_pic' : "/images/caGallery/gallery-loader.gif",
+    'new_window_pic' : "/images/caGallery/open.png",
     'album_div' : "gallery_album",
     'shrink_to_screen' : true,
     'thumb_container_height' : 160,
@@ -83,11 +102,9 @@ caGallery = {
     end = (all_pics_count < end) ? all_pics_count : end;
     for( var i=start; i < end; i++ ){
       var im = new Element("img", { src : caGallery.PICTURES[i].thumb });
-      im.setStyle( { position : 'relative' } );
+      im.setStyle( { position : 'relative', top : '9px' } );
       im.observe('load', function(e){ 
         var img = e.element();
-        var tp = Math.abs((cont_height - img.height))/2;
-        img.setStyle({top : tp});
         img.parentNode.setStyle({ backgroundImage : 'none' });
       });
       gal.insert( (new Element("div", {'class':"gallery_picture_holder"})).update(im).observe( 'click', caGallery.__eventShowImg(i) ) );
@@ -105,7 +122,7 @@ caGallery = {
         pages[pages.length] = '<a href="javascript:void(0);" onclick="caGallery.toPage('+i+');">'+i+'</a>';
       }
     }
-    gal.insert('<div style="clear:both;"></div><p>'+pages.join(" | ")+'</p>');
+    gal.insert('<div style="clear:both;"></div><div id="paginator">'+pages.join(" ")+'</div>');
   },
 
   toPage : function(ind){
@@ -122,7 +139,7 @@ caGallery = {
     caGallery.CURRENT_IMG_INDEX = typeof(ind) == 'undefined' ? 0 : ind;
     caGallery.changeImg();
     $("slideshow_background").show();
-    $("slideshow_container").setStyle({ top : document.viewport.getScrollOffsets().top }).appear();
+    $("slideshow_container").appear();
     caGallery.addShortcutListeners();
   },
 
@@ -174,7 +191,7 @@ caGallery = {
   
     // making sure the image fits in the max height/width dimensions
     var max_width = window.innerWidth-15 ;
-    var max_height = window.innerHeight-80 ;// -80 to fit the controls in
+    var max_height = window.innerHeight-140 ;// -140 to fit the controls in
     
     if( i.width > max_width || i.height > max_height ){
       if( i.width > max_width && i.height <= max_height ){
@@ -200,9 +217,9 @@ caGallery = {
   
   addShortcutListeners : function(){
     if(typeof(window['shortcut']) != 'undefined'){
-      shortcut.add('right', function(){ caGallery.changeImg(1); });
-      shortcut.add('left', function(){ caGallery.changeImg(-1); });
-      shortcut.add('escape', function(){ caGallery.closeSlideshow(); })
+      shortcut.add('right', caGallery.next);
+      shortcut.add('left', caGallery.previous);
+      shortcut.add('escape', caGallery.closeSlideshow)
     }
   },
   
@@ -212,6 +229,14 @@ caGallery = {
       shortcut.remove('left');
       shortcut.remove('escape');
     }
+  },
+  
+  next : function () {
+    caGallery.changeImg(1);
+  },
+  
+  previous : function () {
+    caGallery.changeImg(-1);
   }
 
 }
@@ -221,9 +246,9 @@ caGallery.slideshowHtml = ' \
     <div id="slideshow_container" style="display:none;"> \
     \
       <div id="slideshow_controls"> \
-        <a id="slideshow_button_prev" onclick="caGallery.changeImg(-1); return false;">&nbsp;</a> \
+        <a id="slideshow_button_prev" onclick="caGallery.previous(); return false;">&nbsp;</a> \
         <a id="slideshow_button_close" onclick="caGallery.closeSlideshow(); return false;">&nbsp;</a> \
-        <a id="slideshow_button_next" onclick="caGallery.changeImg(1); return false;">&nbsp;</a> \
+        <a id="slideshow_button_next" onclick="caGallery.next(); return false;">&nbsp;</a> \
       </div> \
       <div id="'+caGallery.configs.get('holder')+'"> \
         <img src="'+caGallery.configs.get('loading_pic')+'" /> \
